@@ -1,6 +1,4 @@
-packages:=boost libevent curl openssl minizip
-
-qt_packages = zlib
+packages:=boost libevent curl openssl minizip zlib
 
 qrencode_packages = qrencode
 
