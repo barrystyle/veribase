@@ -32,6 +32,10 @@
 #include <stdlib.h>
 #include <string.h>
 #include <inttypes.h>
+#include <veribase.h>
+
+unsigned char *scratchbuf = nullptr;
+int N = 0, SCRYPT_SCRATCHPAD_SIZE = 0;
 
 static const uint32_t sha256_h[8] = {
     0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a,
@@ -818,15 +822,28 @@ bool scrypt_N_1_1_256_multi(void *input, uint256 hashTarget, int *nHashesDone, u
 	return false;
 }
 
+void setScryptParams()
+{
+    if (veribase::IsVerium()) {
+        N = 1048576;
+        SCRYPT_SCRATCHPAD_SIZE = 134218239;
+    } else {
+        N = 1024;
+        SCRYPT_SCRATCHPAD_SIZE = 131135;
+    }
+}
+
 void scryptHash(const void *input, char *output)
 {
     uint32_t midstate[8];
     uint32_t data[20];
-    unsigned char *scratchbuf = scrypt_buffer_alloc();
+
+    if (!scratchbuf) {
+        setScryptParams();
+        scratchbuf = scrypt_buffer_alloc();
+    }
 
     memset(output, 0, 32);
-    if (!scratchbuf)
-        return;
 
     for (int i = 0; i < 20; i++)
         data[i] = be32dec(&((const uint32_t *)input)[i]);
@@ -835,6 +852,9 @@ void scryptHash(const void *input, char *output)
     sha256_transform(midstate, data, 0);
 
     scrypt_N_1_1_256(data, (uint32_t*)output, midstate, scratchbuf);
+}
 
+void destroyScratchbuf()
+{
     free(scratchbuf);
 }

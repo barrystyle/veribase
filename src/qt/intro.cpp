@@ -16,6 +16,7 @@
 
 #include <interfaces/node.h>
 #include <util/system.h>
+#include <veribase.h>
 
 #include <QFileDialog>
 #include <QSettings>
@@ -197,7 +198,7 @@ bool Intro::showIfNeeded(interfaces::Node& node, bool& did_show_intro)
         Intro intro(0, node.getAssumedBlockchainSize(), node.getAssumedChainStateSize());
         intro.setDataDirectory(dataDir);
 
-        if( GUIUtil::IsVericoin() )
+        if (!veribase::IsVerium())
             intro.setWindowIcon(QIcon(":icons/vericoin"));
         else
             intro.setWindowIcon(QIcon(":icons/verium"));

@@ -119,7 +119,7 @@ bool parseBitcoinURI(const QUrl &uri, SendCoinsRecipient *out)
 {
     // return if URI is not valid or is no bitcoin: URI
     QString uriScheme = QString("vericoin");
-    if( ! Params().IsVericoin() )
+    if (veribase::IsVerium())
         uriScheme = QString("verium");
 
     if(!uri.isValid() || uri.scheme() != uriScheme)
@@ -187,7 +187,7 @@ QString formatBitcoinURI(const SendCoinsRecipient &info)
     bool bech_32 = info.address.startsWith(QString::fromStdString(Params().Bech32HRP() + "1"));
 
     QString uriScheme = QString("vericoin");
-    if( ! Params().IsVericoin() )
+    if (veribase::IsVerium())
         uriScheme = QString("verium");
 
     QString ret = uriScheme + QString(":%1").arg(bech_32 ? info.address.toUpper() : info.address);
@@ -917,14 +917,9 @@ void LogQtInfo()
     }
 }
 
-bool IsVericoin()
-{
-    return Params().IsVericoin();
-}
-
 QString GetCoinName()
 {
-    if( IsVericoin() )
+    if (!veribase::IsVerium())
         return QString("Vericoin");
     else
         return QString("Verium");
@@ -932,7 +927,7 @@ QString GetCoinName()
 
 QString GetCurrencyName()
 {
-    if( IsVericoin() )
+    if (!veribase::IsVerium())
         return QString("VRC");
     else
         return QString("VRM");

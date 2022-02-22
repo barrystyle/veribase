@@ -74,7 +74,7 @@ SplashScreen::SplashScreen(interfaces::Node& node, Qt::WindowFlags f, const Netw
     );
 
     QPixmap logoPixmap(":/icons/vrcsplashlogo");
-    if( ! GUIUtil::IsVericoin() )
+    if (veribase::IsVerium())
         logoPixmap = QPixmap(":/icons/vrmsplashlogo");
 
     QPixmap logo = logoPixmap.scaledToHeight(112, Qt::SmoothTransformation);

@@ -98,7 +98,7 @@ CAmount calculateMinerReward(const CBlockIndex* pindex)
 // miner's coin base reward
 int64_t GetProofOfWorkReward(int64_t nFees,const CBlockIndex* pindex)
 {
-    if( IsVericoin )
+    if (!veribase::IsVerium())
     {
         return (2500 * COIN) + nFees;
     }
@@ -140,7 +140,7 @@ int GetBlockRatePerHour()
 
 double GetPoWKHashPM(const CChainParams& params)
 {
-    if( params.IsVericoin() && ::ChainActive().Tip()->nHeight > params.GetConsensus().PoSHeight)
+    if( !veribase::IsVerium() && ::ChainActive().Tip()->nHeight > params.GetConsensus().PoSHeight)
         return 0;
 
     int nPoWInterval = 72;

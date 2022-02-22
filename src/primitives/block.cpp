@@ -12,11 +12,10 @@
 
 uint256 CBlockHeader::GetHash() const
 {
-    if(IsVericoin)
-        return this->GetWorkHash();
-    else
-        return this->GetVeriumHash();
-
+    if (!veribase::IsVerium()) {
+        return GetWorkHash();
+    }
+    return GetVeriumHash();
 }
 
 uint256 CBlockHeader::GetVeriumHash() const

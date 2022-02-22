@@ -549,9 +549,8 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
 
     // Time (prevent mempool memory exhaustion attack)
     // moved from CheckTransaction() to here, because it makes no sense to make GetAdjustedTime() a part of the consensus rules - user can set his clock to whatever he wishes.
-    if (tx.nTime > GetAdjustedTime() + MAX_FUTURE_BLOCK_TIME )
+    if (tx.nTime > GetAdjustedTime() + veribase::NetworkMaxFutureBlockTime())
         return state.Invalid(TxValidationResult::TX_CONSENSUS, "far-in-future");
-
 
     // Coinbase is only valid in a block, not as a loose transaction
     if (tx.IsCoinBase() || tx.IsCoinStake())
@@ -961,11 +960,6 @@ bool ReadBlockFromDisk(CBlock& block, const FlatFilePos& pos, const Consensus::P
     catch (const std::exception& e) {
         return error("%s: Deserialize or I/O error - %s at %s", __func__, e.what(), pos.ToString());
     }
-
-    // Check the header
-    // Only on vericoin as it will slow too much verium
-    if (consensusParams.fIsVericoin && block.IsProofOfWork() && !CheckProofOfWork(block.GetHash(), block.nBits, consensusParams))
-        return error("ReadBlockFromDisk: Errors in block header at %s", pos.ToString());
 
     if (block.IsProofOfStake())
         block.nFlags |= CBlockIndex::BLOCK_PROOF_OF_STAKE;
@@ -1472,10 +1466,8 @@ int ApplyTxInUndo(Coin&& undo, CCoinsViewCache& view, const COutPoint& out)
             undo.nHeight = alternate.nHeight;
             undo.fCoinBase = alternate.fCoinBase;
             undo.nTime = alternate.nTime;           // ppcoin
-
-            if( chainparams.IsVericoin())
+            if (!veribase::IsVerium())
                 undo.fCoinStake = alternate.fCoinStake; // ppcoin
-
         } else {
             return DISCONNECT_FAILED; // adding output for transaction without known metadata
         }
@@ -1656,7 +1648,7 @@ bool VericoinContextualBlockChecks(const CBlock& block, BlockValidationState& st
 {
     // Verium
     const CChainParams& chainparams = Params();
-    if( !chainparams.IsVericoin() )
+    if (veribase::IsVerium())
         return true;
 
     uint256 hashProofOfStake = uint256();
@@ -1728,7 +1720,7 @@ bool CChainState::ConnectBlock(const CBlock& block, BlockValidationState& state,
     assert(*pindex->phashBlock == block.GetHash());
     int64_t nTimeStart = GetTimeMicros();
 
-    if ( chainparams.IsVericoin() && pindex->nStakeModifier == 0 && pindex->nStakeModifierChecksum == 0 && !VericoinContextualBlockChecks(block, state, pindex, fJustCheck))
+    if (!veribase::IsVerium() && pindex->nStakeModifier == 0 && pindex->nStakeModifierChecksum == 0 && !VericoinContextualBlockChecks(block, state, pindex, fJustCheck))
         return error("%s: failed PoS check %s", __func__, state.ToString());
 
     // Check it again in case a previous version let a bad block in
@@ -1948,9 +1940,10 @@ bool CChainState::ConnectBlock(const CBlock& block, BlockValidationState& state,
     // Check coinbase reward
     // For PoST: Value out is 0, For PoWT value is reward
     // Extra PoST check made in tx_verify
-    if (block.vtx[0]->GetValueOut() > (block.IsProofOfWork()? GetProofOfWorkReward(nFees, pindex->pprev) : 0))
-    {
-        return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-cb-amount");
+    if (veribase::IsVerium()) {
+        CAmount blockReward = GetProofOfWorkReward(nFees, pindex->pprev);
+        if (block.vtx[0]->GetValueOut() > blockReward)
+            return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-cb-amount");
     }
 
     if( block.IsProofOfStake())
@@ -3039,8 +3032,10 @@ bool CheckBlock(const CBlock& block, BlockValidationState& state, const Consensu
         return false;
 
     // Check proof of work matches claimed amount
-    if ( !block.IsProofOfStake() && fCheckPOW && !CheckProofOfWork(block.GetWorkHash(), block.nBits, consensusParams))
-        return state.Invalid(BlockValidationResult::BLOCK_MUTATED, "high-hash", "proof of work failed");
+    if (!veribase::IsVerium()) {
+        if (!block.IsProofOfStake() && fCheckPOW && !CheckProofOfWork(block.GetWorkHash(), block.nBits, consensusParams))
+            return state.Invalid(BlockValidationResult::BLOCK_MUTATED, "high-hash", "proof of work failed");
+    }
 
     // Check the merkle root.
     if (fCheckMerkleRoot) {
@@ -3083,8 +3078,10 @@ bool CheckBlock(const CBlock& block, BlockValidationState& state, const Consensu
         return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-cb-notempty", "coinbase output not empty in PoS block");
 
     // Check coinbase timestamp
-    if (block.GetBlockTime() > (int64_t)block.vtx[0]->nTime + MAX_FUTURE_BLOCK_TIME)
-        return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-cb-time", "coinbase timestamp is too early");
+    if (!veribase::IsVerium()) {
+        if (block.GetBlockTime() > (int64_t)block.vtx[0]->nTime + veribase::NetworkMaxFutureBlockTime())
+            return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-cb-time", "coinbase timestamp is too early");
+    }
 
     // Check coinstake timestamp
     if (block.IsProofOfStake() && !CheckCoinStakeTimestamp(block.GetBlockTime(), (int64_t)block.vtx[1]->nTime))
@@ -3200,7 +3197,7 @@ static bool ContextualCheckBlockHeader(const CBlockHeader& block, BlockValidatio
 
     LogPrintf("Checking block header #%d (%s) work\n", nHeight, (isPoS ? "PoS" : "PoW"));
 
-    if (params.IsVericoin() && !isPoS && nHeight > consensusParams.PoSHeight)
+    if (!veribase::IsVerium() && !isPoS && nHeight > consensusParams.PoSHeight)
         return error("%s: Consensus::CheckBlock: %s", __func__, "out-of-pow-height");
 
     // Check proof of work or proof-of-stake
@@ -3222,11 +3219,11 @@ static bool ContextualCheckBlockHeader(const CBlockHeader& block, BlockValidatio
     }
 
     // Check timestamp against prev
-    if (block.GetBlockTime() <= pindexPrev->GetMedianTimePast() || block.GetBlockTime() +  MAX_FUTURE_BLOCK_TIME < pindexPrev->GetBlockTime())
+    if (block.GetBlockTime() <= pindexPrev->GetMedianTimePast())
         return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "time-too-old", "block's timestamp is too early");
 
     // Check timestamp
-    if (block.GetBlockTime() > nAdjustedTime + MAX_FUTURE_BLOCK_TIME)
+    if (block.GetBlockTime() > nAdjustedTime + veribase::NetworkMaxFutureBlockTime())
         return state.Invalid(BlockValidationResult::BLOCK_TIME_FUTURE, "time-too-new", "block timestamp too far in the future");
 
     return true;
@@ -3322,7 +3319,7 @@ bool BlockManager::AcceptBlockHeader(const CBlockHeader& block, BlockValidationS
             return true;
         }
 
-        if (!CheckBlockHeader(block, state, chainparams.GetConsensus(), !IsProofOfStake(chainparams.GetConsensus(), pindex->nHeight+1)))
+        if (!CheckBlockHeader(block, state, chainparams.GetConsensus(), veribase::IsVerium() ? false : !IsProofOfStake(chainparams.GetConsensus(), pindex->nHeight+1)))
             return error("%s: Consensus::CheckBlockHeader: %s, %s", __func__, hash.ToString(), state.ToString());
 
         // Get prev block index
@@ -3454,7 +3451,7 @@ bool CChainState::AcceptBlock(const std::shared_ptr<const CBlock>& pblock, Block
         return false;
 
     // ppcoin: we should only accept blocks that can be connected to a prev block with validated PoS
-    if( chainparams.IsVericoin() && pindex->pprev && !pindex->pprev->IsValid(BLOCK_VALID_TRANSACTIONS)) {
+    if (!veribase::IsVerium() && pindex->pprev && !pindex->pprev->IsValid(BLOCK_VALID_TRANSACTIONS)) {
         return error("%s: this block does not connect to any valid known block", __func__);
     }
 
@@ -3559,7 +3556,7 @@ bool ProcessNewBlock(const CChainParams& chainparams, const std::shared_ptr<cons
         }
 
         // search for dup
-        if (chainparams.IsVericoin() &&  pindex->IsProofOfStake() && !::ChainstateActive().IsInitialBlockDownload()) {
+        if (!veribase::IsVerium() &&  pindex->IsProofOfStake() && !::ChainstateActive().IsInitialBlockDownload()) {
             int32_t ndx = univHash(pindex->hashProofOfStake);
             if (fPoSDuplicate && vStakeSeen[ndx] == pindex->hashProofOfStake)
                 *fPoSDuplicate = true;
@@ -3708,7 +3705,7 @@ bool BlockManager::LoadBlockIndex(
         if (pindex->IsValid(BLOCK_VALID_TREE) && (pindexBestHeader == nullptr || CBlockIndexWorkComparator()(pindexBestHeader, pindex)))
             pindexBestHeader = pindex;
 
-        if( consensus_params.fIsVericoin )
+        if (!veribase::IsVerium())
         {
             // ppcoin: calculate stake modifier checksum
             pindex->nStakeModifierChecksum = GetStakeModifierChecksum(pindex);
@@ -4666,15 +4663,14 @@ double GuessVerificationProgress(const ChainTxData& data, const CBlockIndex *pin
 // Split PoS and PoW work in to
 unsigned int GetNextTargetOrWorkRequired(const CBlockIndex* pindexLast, bool fProofOfStake, const Consensus::Params& consensusParams)
 {
-    if (consensusParams.fIsVericoin)
-        return GetNextTargetRequired(pindexLast, fProofOfStake, consensusParams);
-    else
-        return GetNextWorkRequired(pindexLast, consensusParams);
+    if (!veribase::IsVerium())
+	return GetNextTargetRequired(pindexLast, fProofOfStake, consensusParams);
+    return GetNextWorkRequired(pindexLast, consensusParams);
 }
 
 bool IsProofOfStake(const Consensus::Params& consensusParams, int nHeight)
 {
-    if( ! consensusParams.fIsVericoin )
+    if (veribase::IsVerium())
         return false;
 
     if (nHeight > consensusParams.PoSHeight)

@@ -94,7 +94,7 @@ void PaymentServer::ipcParseCommandLine(interfaces::Node& node, int argc, char* 
             SendCoinsRecipient r;
             if (GUIUtil::parseBitcoinURI(arg, &r) && !r.address.isEmpty())
             {
-                if( GUIUtil::IsVericoin())
+                if (!veribase::IsVerium())
                 {
                     auto tempChainParams = CreateChainParams(CBaseChainParams::VERIUM);
 

@@ -10,6 +10,7 @@
 #include <primitives/transaction.h>
 #include <serialize.h>
 #include <uint256.h>
+#include <veribase.h>
 
 /** Nodes collect new transactions into a block, hash them into a hash tree,
  * and scan through nonce values to make the block's hash satisfy proof-of-work
@@ -112,10 +113,8 @@ public:
     inline void SerializationOp(Stream& s, Operation ser_action) {
         READWRITEAS(CBlockHeader, *this);
         READWRITE(vtx);
-
-        if( IsVericoin )
+        if (!veribase::IsVerium())
             READWRITE(vchBlockSig);
-
     }
 
     void SetNull()
@@ -142,7 +141,7 @@ public:
     // ppcoin: two types of block: proof-of-work or proof-of-stake
     bool IsProofOfStake() const
     {
-        if( !IsVericoin ) {
+        if (veribase::IsVerium()) {
             return false;
         }
         return (vtx.size() > 1 && vtx[1]->IsCoinStake());

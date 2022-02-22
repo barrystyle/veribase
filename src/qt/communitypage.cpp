@@ -10,6 +10,7 @@
 #include <qt/guiconstants.h>
 #include <qt/guiutil.h>
 #include <qt/platformstyle.h>
+#include <veribase.h>
 
 #include <QGraphicsDropShadowEffect>
 #include <QDesktopServices>
@@ -69,7 +70,7 @@ bool CommunityPage::eventFilter(QObject *object, QEvent *event)
 void CommunityPage::openLink(QObject *object)
 {
     if(object->objectName() == "explorerBox") {
-        if( GUIUtil::IsVericoin() )
+        if (!veribase::IsVerium())
             QDesktopServices::openUrl(QUrl(COMMUNITY_VRC_EXPLORER_URL));
         else
             QDesktopServices::openUrl(QUrl(COMMUNITY_VRM_EXPLORER_URL));

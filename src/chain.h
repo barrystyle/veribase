@@ -22,29 +22,13 @@
 #include <vector>
 
 /**
- * Maximum amount of time that a block timestamp is allowed to exceed the
- * current network-adjusted time before the block will be accepted.
- */
-#if CLIENT_IS_VERIUM
-static constexpr int64_t MAX_FUTURE_BLOCK_TIME = 2 * 60 * 60;
-#else
-static constexpr int64_t MAX_FUTURE_BLOCK_TIME = 10 * 60;
-#endif
-/**
- * Timestamp window used as a grace period by code that compares external
- * timestamps (such as timestamps passed to RPCs, or wallet key creation times)
- * to block timestamps. This should be set at least as high as
- * MAX_FUTURE_BLOCK_TIME.
- */
-static constexpr int64_t TIMESTAMP_WINDOW = MAX_FUTURE_BLOCK_TIME;
-
-/**
  * Maximum gap between node time and block time used
  * for the "Catching up..." mode in GUI.
  *
  * Ref: https://github.com/bitcoin/bitcoin/pull/1026
  */
 static constexpr int64_t MAX_BLOCK_TIME_GAP = 90 * 60;
+
 class CBlockFileInfo
 {
 public:

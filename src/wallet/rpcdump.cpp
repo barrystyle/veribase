@@ -1321,7 +1321,7 @@ UniValue importmulti(const JSONRPCRequest& mainRequest)
                                       "caused by pruning or data corruption (see " + Params().GetCoinName() + "d log for details) and could "
                                       "be dealt with by downloading and rescanning the relevant blocks (see -reindex "
                                       "and -rescan options).",
-                                GetImportTimestamp(request, now), scannedTime - TIMESTAMP_WINDOW - 1, TIMESTAMP_WINDOW)));
+                                GetImportTimestamp(request, now), scannedTime - veribase::NetworkMaxFutureBlockTime() - 1, veribase::NetworkMaxFutureBlockTime())));
                     response.push_back(std::move(result));
                 }
                 ++i;

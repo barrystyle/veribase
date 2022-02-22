@@ -17,6 +17,7 @@
 #include <chainparams.h>
 #include <compat/sanity.h>
 #include <consensus/validation.h>
+#include <crypto/scrypt.h>
 #include <downloader.h>
 #include <fs.h>
 #include <hash.h>
@@ -55,6 +56,7 @@
 #include <util/threadnames.h>
 #include <util/translation.h>
 #include <validation.h>
+#include <veribase.h>
 
 #include <validationinterface.h>
 #include <walletinitinterface.h>
@@ -97,18 +99,9 @@ static const bool DEFAULT_STOPAFTERBLOCKIMPORT = false;
 
 static const char* DEFAULT_ASMAP_FILENAME="ip_asn.map";
 
-/**
- * The PID file facilities.
- */
-#if CLIENT_IS_VERIUM
-    static const char* BITCOIN_PID_FILENAME = "veriumd.pid";
-#else
-    static const char* BITCOIN_PID_FILENAME = "vericoind.pid";
-#endif
-
 static fs::path GetPidFile()
 {
-    return AbsPathForConfigVal(fs::path(gArgs.GetArg("-pid", BITCOIN_PID_FILENAME)));
+    return AbsPathForConfigVal(fs::path(gArgs.GetArg("-pid", veribase::DaemonPidFileName())));
 }
 
 NODISCARD static bool CreatePidFile()
@@ -310,6 +303,9 @@ void Shutdown(NodeContext& node)
         LogPrintf("%s: Unable to remove PID file: %s\n", __func__, fsbridge::get_filesystem_error_message(e));
     }
 
+    LogPrintf("%s: deallocating scrypt scratchbuf\n", __func__);
+    destroyScratchbuf();
+
     LogPrintf("%s: done\n", __func__);
 }
 
@@ -404,7 +400,7 @@ void SetupServerArgs()
     gArgs.AddArg("-par=<n>", strprintf("Set the number of script verification threads (%u to %d, 0 = auto, <0 = leave that many cores free, default: %d)",
         -GetNumCores(), MAX_SCRIPTCHECK_THREADS, DEFAULT_SCRIPTCHECK_THREADS), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     gArgs.AddArg("-persistmempool", strprintf("Whether to save the mempool on shutdown and load on restart (default: %u)", DEFAULT_PERSIST_MEMPOOL), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
-    gArgs.AddArg("-pid=<file>", strprintf("Specify pid file. Relative paths will be prefixed by a net-specific datadir location. (default: %s)", BITCOIN_PID_FILENAME), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
+    gArgs.AddArg("-pid=<file>", strprintf("Specify pid file. Relative paths will be prefixed by a net-specific datadir location. (default: %s)", veribase::DaemonPidFileName()), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     gArgs.AddArg("-reindex", "Rebuild chain state and block index from the blk*.dat files on disk", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     gArgs.AddArg("-reindex-chainstate", "Rebuild chain state from the currently indexed blocks. When in pruning mode or if blocks on disk might be corrupted, use full -reindex instead.", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
 #ifndef WIN32

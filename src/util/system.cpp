@@ -10,7 +10,7 @@
 #include <util/strencodings.h>
 #include <util/string.h>
 #include <util/translation.h>
-
+#include <veribase.h>
 
 #if (defined(__FreeBSD__) || defined(__OpenBSD__) || defined(__DragonFly__))
 #include <pthread.h>
@@ -879,8 +879,10 @@ std::string ArgsManager::GetChainName() const
         return value.isNull() ? false : value.isBool() ? value.get_bool() : InterpretBool(value.get_str());
     };
 
-    const bool fVericoin = get_net("-vericoin");
-    const bool fVerium = get_net("-verium");
+    bool fVericoin = get_net("-vericoin");
+    bool fVerium = get_net("-verium");
+    veribase::SetVerium(fVerium);
+
     const bool is_chain_arg_set = IsArgSet("-chain");
 
     if ((int)is_chain_arg_set + (int)fVericoin + (int)fVerium > 1) {
@@ -891,7 +893,7 @@ std::string ArgsManager::GetChainName() const
     if (fVerium)
         return CBaseChainParams::VERIUM;
 
-    if( IsVericoin )
+    if (!veribase::IsVerium())
         return GetArg("-chain", CBaseChainParams::VERICOIN);
     else
         return GetArg("-chain", CBaseChainParams::VERIUM);

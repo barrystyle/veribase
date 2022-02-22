@@ -4,6 +4,7 @@
 #include <init.h>
 #include <logging.h>
 #include <util/system.h>
+#include <veribase.h>
 
 #include <util/miniunz.h>
 #define CURL_STATICLIB
@@ -38,7 +39,7 @@ void set_xferinfo_data(void* d)
 }
 
 std::string getClientUrl() {
-    if( IsVericoin )
+    if (!veribase::IsVerium())
         return CLIENT_URL_VRC;
     else
         return CLIENT_URL_VRM;

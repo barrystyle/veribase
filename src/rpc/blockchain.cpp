@@ -207,7 +207,7 @@ UniValue blockheaderToJSON(const CBlockIndex* tip, const CBlockIndex* blockindex
     result.pushKV("difficulty", GetDifficulty(blockindex));
     result.pushKV("nTx", (uint64_t)blockindex->nTx);
 
-    if( Params().IsVericoin() ) {
+    if (!veribase::IsVerium()) {
         result.pushKV("mint", blockindex->nMint);
         result.pushKV("blocktrust", blockindex->GetBlockHash().GetHex());
         result.pushKV("chaintrust", blockindex->nChainWork.GetHex());
@@ -260,7 +260,7 @@ UniValue blockToJSON(const CBlock& block, const CBlockIndex* tip, const CBlockIn
     result.pushKV("nTx", (uint64_t)blockindex->nTx);
     result.pushKV("flags", strprintf("%s%s", blockindex->IsProofOfStake()? "proof-of-stake" : "proof-of-work", blockindex->GeneratedStakeModifier()? " stake-modifier": ""));
 
-    if( Params().IsVericoin() ) {
+    if (!veribase::IsVerium()) {
         result.pushKV("mint", blockindex->nMint);
         result.pushKV("blocktrust", blockindex->GetBlockHash().GetHex());
         result.pushKV("chaintrust", blockindex->nChainWork.GetHex());
@@ -469,7 +469,7 @@ static UniValue syncwithvalidationinterfacequeue(const JSONRPCRequest& request)
 
 static UniValue getdifficulty(const JSONRPCRequest& request)
 {
-    if( ! Params().IsVericoin()) {
+    if (veribase::IsVerium()) {
 
         RPCHelpMan{"getdifficulty",
             "\nReturns the  difficulty as a multiple of the minimum difficulty.\n",
@@ -507,7 +507,7 @@ static UniValue getdifficulty(const JSONRPCRequest& request)
     LOCK(cs_main);
 
     // verium
-    if( ! Params().IsVericoin() )
+    if (veribase::IsVerium())
         return GetDifficulty(::ChainActive().Tip());
 
 
@@ -861,15 +861,10 @@ static UniValue getblockheader(const JSONRPCRequest& request)
                             {RPCResult::Type::NUM, "nTx", "The number of transactions in the block"},
                             {RPCResult::Type::STR_HEX, "previousblockhash", "The hash of the previous block"},
                             {RPCResult::Type::STR_HEX, "nextblockhash", "The hash of the next block"},
-#if CLIENT_IS_VERIUM
-                            // Verium
-                            {RPCResult::Type::STR_HEX, "chainwork", "Expected number of hashes required to produce the current chain"},
-#else
-                            // Vericoin
-                            {RPCResult::Type::STR_HEX, "chaintrust", "Expected number of hashes required to produce the current chain"},
-                            {RPCResult::Type::STR_HEX, "blocktrust", "Block Trust"},
+                            {RPCResult::Type::STR_HEX, "chainwork", "Expected number of hashes required to produce the current chain (Verium)"},
+                            {RPCResult::Type::STR_HEX, "chaintrust", "Expected number of hashes required to produce the current chain (Vericoin)"},
+                            {RPCResult::Type::STR_HEX, "blocktrust", "Block Trust  (Vericoin)"},
                             {RPCResult::Type::NUM, "mint", "Mint"},
-#endif
                         }},
                     RPCResult{"for verbose=false",
                         RPCResult::Type::STR_HEX, "", "A string that is serialized, hex-encoded data for block 'hash'"},
@@ -969,18 +964,15 @@ static UniValue getblock(const JSONRPCRequest& request)
                     {RPCResult::Type::NUM, "nTx", "The number of transactions in the block"},
                     {RPCResult::Type::STR_HEX, "previousblockhash", "The hash of the previous block"},
                     {RPCResult::Type::STR_HEX, "nextblockhash", "The hash of the next block"},
-#if CLIENT_IS_VERIUM
-                    {RPCResult::Type::STR_HEX, "chainwork", "Expected number of hashes required to produce the chain up to this block"},
-#else
-                    {RPCResult::Type::STR_HEX, "chaintrust", "Expected number of hashes required to produce the chain up to this block"},
-                    {RPCResult::Type::STR_HEX, "blocktrust", "Block trust"},
-                    {RPCResult::Type::STR_HEX, "proofhash", "Proof Hash"},
-                    {RPCResult::Type::STR_HEX, "blocksignature", "Block Signature"},
-                    {RPCResult::Type::NUM, "mint", "Mint"},
-                    {RPCResult::Type::NUM, "entropybit", "Entropy Bit"},
-                    {RPCResult::Type::STR, "modifier", "Modifier"},
-                    {RPCResult::Type::STR, "modifierchecksum", "Modifier Checksum"},
-#endif
+                    {RPCResult::Type::STR_HEX, "chainwork", "Expected number of hashes required to produce the chain up to this block (Verium)"},
+                    {RPCResult::Type::STR_HEX, "chaintrust", "Expected number of hashes required to produce the chain up to this block (Vericoin)"},
+                    {RPCResult::Type::STR_HEX, "blocktrust", "Block trust (Vericoin)"},
+                    {RPCResult::Type::STR_HEX, "proofhash", "Proof Hash (Vericoin)"},
+                    {RPCResult::Type::STR_HEX, "blocksignature", "Block Signature (Vericoin)"},
+                    {RPCResult::Type::NUM, "mint", "Mint (Vericoin)"},
+                    {RPCResult::Type::NUM, "entropybit", "Entropy Bit (Vericoin)"},
+                    {RPCResult::Type::STR, "modifier", "Modifier (Vericoin)"},
+                    {RPCResult::Type::STR, "modifierchecksum", "Modifier Checksum (Vericoin)"},
                 }},
                     RPCResult{"for verbosity = 2",
                 RPCResult::Type::OBJ, "", "",

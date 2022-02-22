@@ -16,24 +16,15 @@
 #include <boost/algorithm/string/classification.hpp>
 #include <boost/algorithm/string/split.hpp>
 
-static CBlock CreateGenesisBlock(std::string chainName, const char* pszTimestamp, const CScript& genesisOutputScript, uint32_t nTime, uint32_t nNonce, uint32_t nBits, int32_t nVersion, const CAmount& genesisReward)
+static CBlock CreateGenesisBlock(const char* pszTimestamp, const CScript& genesisOutputScript, uint32_t nTime, uint32_t nNonce, uint32_t nBits, int32_t nVersion, const CAmount& genesisReward, bool isVerium)
 {
     CMutableTransaction txNew;
     txNew.nVersion = 1;
     txNew.nTime = nTime; // PoXT
     txNew.vin.resize(1);
     txNew.vout.resize(1);
-
-    if (chainName == CBaseChainParams::VERIUM)
-    {
-        txNew.vin[0].scriptSig = CScript() << 0 << CScriptNum(999) << std::vector<unsigned char>((const unsigned char*)pszTimestamp, (const unsigned char*)pszTimestamp + strlen(pszTimestamp));
-        txNew.vout[0].SetEmpty();
-    }
-    else
-    {
-        txNew.vin[0].scriptSig = CScript() << 0 << CScriptNum(42) << std::vector<unsigned char>((const unsigned char*)pszTimestamp, (const unsigned char*)pszTimestamp + strlen(pszTimestamp));
-        txNew.vout[0].SetEmpty();
-    }
+    txNew.vin[0].scriptSig = CScript() << 0 << CScriptNum(isVerium ? 999 : 42) << std::vector<unsigned char>((const unsigned char*)pszTimestamp, (const unsigned char*)pszTimestamp + strlen(pszTimestamp));
+    txNew.vout[0].SetEmpty();
 
     CBlock genesis;
     genesis.nTime    = nTime;
@@ -51,15 +42,23 @@ static CBlock CreateGenesisBlock(std::string chainName, const char* pszTimestamp
  * transaction cannot be spent since it did not originally exist in the
  * database.
  */
-static CBlock CreateGenesisBlock(std::string chainName, uint32_t nTime, uint32_t nNonce, uint32_t nBits, int32_t nVersion, const CAmount& genesisReward)
+static CBlock CreateVericoinGenesisBlock(std::string chainName, uint32_t nTime, uint32_t nNonce, uint32_t nBits, int32_t nVersion, const CAmount& genesisReward)
 {
     const char* pszTimestamp = "9 May 2014 US politicians can accept bitcoin donations";
-    if (chainName == CBaseChainParams::VERIUM)
-        pszTimestamp = "VeriCoin block 1340292";
-
     const CScript genesisOutputScript = CScript();
+    return CreateGenesisBlock(pszTimestamp, genesisOutputScript, nTime, nNonce, nBits, nVersion, genesisReward, false);
+}
 
-    return CreateGenesisBlock(chainName, pszTimestamp, genesisOutputScript, nTime, nNonce, nBits, nVersion, genesisReward);
+/**
+ * Build the genesis block. Note that the output of its generation
+ * transaction cannot be spent since it did not originally exist in the
+ * database.
+ */
+static CBlock CreateVeriumGenesisBlock(uint32_t nTime, uint32_t nNonce, uint32_t nBits, int32_t nVersion, const CAmount& genesisReward)
+{
+    const char* pszTimestamp = "VeriCoin block 1340292";
+    const CScript genesisOutputScript = CScript();
+    return CreateGenesisBlock(pszTimestamp, genesisOutputScript, nTime, nNonce, nBits, nVersion, genesisReward, true);
 }
 
 /**
@@ -97,10 +96,8 @@ public:
         consensus.nModifierInterval = 10 * 60;
         consensus.nTargetTimespan = 16 * 60;
 
-        consensus.nMinimumChainWork = uint256S("0x000000000000000000000000000000000000000000000000000ffc68baecd62e"); // 3000000
+        consensus.nMinimumChainWork = uint256S("0x0000000000000000000000000000000000000000000000000000000000000000"); // 3000000
         consensus.defaultAssumeValid = uint256S("0x335fcdca698d63447f3c2e181071fc315131c8867f56e0e84cdc9d220b39c033"); // 3000000
-
-        consensus.fIsVericoin = true;
 
         pchMessageStart[0] = 0x70;
         pchMessageStart[1] = 0x35;
@@ -110,13 +107,11 @@ public:
         m_assumed_blockchain_size = 6;
         m_assumed_chain_state_size = 1;
 
-        genesis = CreateGenesisBlock(strNetworkID, 1399690945, 612416, 0x1e0fffff, 1, 2500 * COIN);
+        genesis = CreateVericoinGenesisBlock(strNetworkID, 1399690945, 612416, 0x1e0fffff, 1, 2500 * COIN);
         consensus.hashGenesisBlock = genesis.GetWorkHash();
-
-#if !CLIENT_IS_VERIUM
         assert(consensus.hashGenesisBlock == uint256S("0x000004da58a02be894a6c916d349fe23cc29e21972cafb86b5d3f07c4b8e6bb8"));
         assert(genesis.hashMerkleRoot == uint256S("0x60424046d38de827de0ed1a20a351aa7f3557e3e1d3df6bfb34a94bc6161ec68"));
-#endif
+
         vFixedSeeds.clear();
         vSeeds.clear();
         vSeeds.emplace_back("seed.vrc.vericonomy.com");
@@ -216,10 +211,8 @@ public:
         consensus.nModifierInterval = 0; // No use for verium
         consensus.nTargetTimespan = 0;
 
-        consensus.nMinimumChainWork = uint256S("00000000000000000000000000000000000000000000000000000caa7ae09617"); // 550000
+        consensus.nMinimumChainWork = uint256S("0x0000000000000000000000000000000000000000000000000000000000000000"); // 550000
         consensus.defaultAssumeValid = uint256S("cf444659c13aa06daae3cb6cbd697780a355e10b6a4d758ace78660bfd91ea61"); // 550000
-
-        consensus.fIsVericoin = false;
 
         pchMessageStart[0] = 0x70;
         pchMessageStart[1] = 0x35;
@@ -229,13 +222,10 @@ public:
         m_assumed_blockchain_size = 1;
         m_assumed_chain_state_size = 4;
 
-        genesis = CreateGenesisBlock(strNetworkID, 1472669240, 233180, 0x1f1fffff, 1, 2500 * COIN);
+        genesis = CreateVeriumGenesisBlock(1472669240, 233180, 0x1f1fffff, 1, 2500 * COIN);
         consensus.hashGenesisBlock = genesis.GetVeriumHash();
-
-#if CLIENT_IS_VERIUM
         assert(consensus.hashGenesisBlock == uint256S("0x8232c0cf3bd7e05546e3d7aaaaf89fed8bc97c4df1a8c95e9249e13a2734932b"));
         assert(genesis.hashMerkleRoot == uint256S("0x925e430072a1f39b530fc79db162e29433ab0ea266a99c8cab4f03001dc9faa9"));
-#endif
 
         vFixedSeeds.clear();
         vSeeds.clear();

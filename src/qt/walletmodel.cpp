@@ -503,7 +503,7 @@ void WalletModel::manageProcess(bool state, int procs)
     std::string Sprocs = qSprocs.toStdString();
     gArgs.SoftSetArg("-genproclimit", Sprocs);
 
-    if( GUIUtil::IsVericoin() ) {
+    if (!veribase::IsVerium()) {
         if( m_node.isStaking() != state ) {
             m_node.manageStaking(m_wallet->getWalletName(), state);
         }

@@ -277,7 +277,7 @@ BitcoinGUI::BitcoinGUI(interfaces::Node& node, const PlatformStyle *_platformSty
     // QFile f(strPath);
 
     QFile f(":/vrmstyle");
-    if( Params().IsVericoin() ) {
+    if (!veribase::IsVerium()) {
        f.setFileName(":/vrcstyle");
     }
 
@@ -309,7 +309,7 @@ void BitcoinGUI::createActions()
 {
     QActionGroup *tabGroup = new QActionGroup(this);
 
-    if( Params().IsVericoin() )
+    if (!veribase::IsVerium())
         overviewAction = new QAction(platformStyle->SingleColorIcon(":/icons/vrcoverview"), tr("&Overview"), this);
     else
         overviewAction = new QAction(platformStyle->SingleColorIcon(":/icons/vrmoverview"), tr("&Overview"), this);

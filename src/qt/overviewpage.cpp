@@ -174,7 +174,7 @@ OverviewPage::OverviewPage(interfaces::Node& node, const PlatformStyle *platform
     connect(ui->blockRewardOrNetworkStakingWarn, &QPushButton::clicked, this, &OverviewPage::handleOutOfSyncWarningClicks);
 
 
-    if( GUIUtil::IsVericoin()) {
+    if (!veribase::IsVerium()) {
         ui->immatureTitle->setText(tr("Staking"));
         ui->blockRewardOrNetworkStakingTitle->setText(tr("Network Coins Stake"));
         ui->minerHashOrInterestTitle->setText(tr("Interest Rate"));
@@ -231,7 +231,7 @@ void OverviewPage::setBalance(const interfaces::WalletBalances& balances)
         ui->labelBalance->setText(BitcoinUnits::formatWithUnit(unit, balances.watch_only_balance, false, BitcoinUnits::separatorAlways));
         ui->labelUnconfirmed->setText(BitcoinUnits::formatWithUnit(unit, balances.unconfirmed_watch_only_balance, false, BitcoinUnits::separatorAlways));
 
-        if( GUIUtil::IsVericoin() ) {
+        if (!veribase::IsVerium()) {
             ui->labelImmature->setText(BitcoinUnits::formatWithUnit(unit, balances.stake, false, BitcoinUnits::separatorAlways));
             ui->labelTotal->setText(BitcoinUnits::formatWithUnit(unit, balances.watch_only_balance + balances.unconfirmed_watch_only_balance + balances.immature_watch_only_balance + balances.stake, false, BitcoinUnits::separatorAlways));
         }
@@ -248,7 +248,7 @@ void OverviewPage::setBalance(const interfaces::WalletBalances& balances)
         ui->labelWatchTotal->setText(BitcoinUnits::formatWithUnit(unit, balances.watch_only_balance + balances.unconfirmed_watch_only_balance + balances.immature_watch_only_balance, false, BitcoinUnits::separatorAlways));
 
 
-        if( GUIUtil::IsVericoin()) {
+        if (!veribase::IsVerium()) {
             ui->labelImmature->setText(BitcoinUnits::formatWithUnit(unit, balances.stake, false, BitcoinUnits::separatorAlways));
             ui->labelTotal->setText(BitcoinUnits::formatWithUnit(unit, balances.balance + balances.unconfirmed_balance + balances.immature_balance + balances.stake, false, BitcoinUnits::separatorAlways));
         }
@@ -267,7 +267,7 @@ void OverviewPage::updateWatchOnlyLabels(bool showWatchOnly)
     ui->watchUnconfirmedBox->setVisible(showWatchOnly);
     ui->watchImmatureBox->setVisible(showWatchOnly);
 
-    if( GUIUtil::IsVericoin())
+    if (!veribase::IsVerium())
         ui->watchImmatureBox->setVisible(false);
 
     ui->watchTotalBox->setVisible(showWatchOnly);
@@ -297,7 +297,7 @@ void OverviewPage::setClientModel(ClientModel *model)
         updateAlerts(model->getStatusBarWarnings());
 
         // On Vericoin, update interest / inflation / ... every block update
-        if( GUIUtil::IsVericoin() ) {
+        if (!veribase::IsVerium()) {
             setVericoinInfo();
             connect(model, &ClientModel::numBlocksChanged, this, &OverviewPage::setVericoinInfo);
         } else {
@@ -369,7 +369,7 @@ void OverviewPage::showOutOfSyncWarning(bool fShow)
     ui->unconfirmedWarn->setVisible(fShow);
     ui->immatureWarn->setVisible(fShow);
     ui->totalWarn->setVisible(fShow);
-    if( GUIUtil::IsVericoin() ) {
+    if (!veribase::IsVerium()) {
         ui->minerHashOrInterestWarn->setVisible(fShow);
         ui->estNextRewardOrInflationWarn->setVisible(fShow);
         ui->blockRewardOrNetworkStakingWarn->setVisible(fShow);
@@ -383,7 +383,7 @@ void OverviewPage::showOutOfSyncWarning(bool fShow)
 
 void OverviewPage::updateStats()
 {
-    if( GUIUtil::IsVericoin() ) {
+    if (!veribase::IsVerium()) {
         if( m_node.isStaking() ) {
             ui->mineButton->setIcon(QIcon(":/icons/stakingon"));
             ui->labelMinerButton->setText(tr("Click to stop:"));
@@ -445,7 +445,7 @@ void OverviewPage::on_mineButton_clicked()
     int peers = clientModel->getNumConnections();
 
     bool miningOrStakingState = m_node.isStaking();
-    if( ! GUIUtil::IsVericoin() ) {
+    if (veribase::IsVerium()) {
 
         miningOrStakingState = m_node.isMining();
 

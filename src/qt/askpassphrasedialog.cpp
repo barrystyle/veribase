@@ -43,7 +43,7 @@ AskPassphraseDialog::AskPassphraseDialog(Mode _mode, QWidget *parent, SecureStri
     ui->passEdit3->installEventFilter(this);
 
     // set the correct icon
-    if( GUIUtil::IsVericoin())
+    if (!veribase::IsVerium())
         ui->vericoinIcon->setPixmap(QPixmap(":/icons/vericoin"));
     else
         ui->vericoinIcon->setPixmap(QPixmap(":/icons/verium"));

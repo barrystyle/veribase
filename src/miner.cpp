@@ -142,7 +142,7 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
         {
             if (pwallet->CreateCoinStake(pwallet, pblock->nBits, nSearchTime-nLastCoinStakeSearchTime, nFees, txCoinStake))
             {
-                if (txCoinStake.nTime >= std::max(pindexPrev->GetMedianTimePast()+1, pindexPrev->GetBlockTime() - MAX_FUTURE_BLOCK_TIME))
+                if (txCoinStake.nTime >= std::max(pindexPrev->GetMedianTimePast()+1, pindexPrev->GetBlockTime() - veribase::NetworkMaxFutureBlockTime()))
                 {   // make sure coinstake would meet timestamp protocol
                     // as it would be the same as the block timestamp
                     coinbaseTx.vout[0].SetEmpty();
@@ -200,7 +200,7 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
     if (fPos)
         pblock->nTime      = pblock->vtx[1]->nTime; //same as coinstake timestamp
     pblock->nTime          = std::max(pindexPrev->GetMedianTimePast()+1, pblock->GetMaxTransactionTime());
-    pblock->nTime          = std::max(pblock->GetBlockTime(), pindexPrev->GetBlockTime() - MAX_FUTURE_BLOCK_TIME);
+    pblock->nTime          = std::max(pblock->GetBlockTime(), pindexPrev->GetBlockTime() - veribase::NetworkMaxFutureBlockTime());
 
     if (! fPos )
         UpdateTime(pblock);

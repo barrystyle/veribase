@@ -155,7 +155,7 @@ void WalletInit::StartProcess(NodeContext& node) const
         return;
     }
 
-    if(Params().IsVericoin()) {
+    if(!veribase::IsVerium()) {
         if (!gArgs.GetBoolArg("-staking", true))
             LogPrintf("Staking disabled\n");
         else {
@@ -168,7 +168,7 @@ void WalletInit::StartProcess(NodeContext& node) const
         }
     }
 
-    if( ! Params().IsVericoin()) {
+    if (veribase::IsVerium()) {
         if (gArgs.IsArgSet("-mining"))
         {
             if ( GetWallets().size() == 0 ) {

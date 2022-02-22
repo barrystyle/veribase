@@ -114,7 +114,7 @@ void EnsureWalletIsUnlocked(const CWallet* pwallet)
     if (pwallet->IsLocked()) {
         throw JSONRPCError(RPC_WALLET_UNLOCK_NEEDED, "Error: Please enter the wallet passphrase with walletpassphrase first.");
     }
-    if (fWalletUnlockStakingOnly && Params().IsVericoin())
+    if (fWalletUnlockStakingOnly && !veribase::IsVerium())
         throw JSONRPCError(RPC_WALLET_UNLOCK_NEEDED, "Error: Wallet unlocked for block minting only.");
 }
 
@@ -326,7 +326,7 @@ static CTransactionRef SendMoney(interfaces::Chain::Lock& locked_chain, CWallet 
     if (nValue > curBalance)
         throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, "Insufficient funds");
 
-    if (fWalletUnlockStakingOnly && Params().IsVericoin())
+    if (fWalletUnlockStakingOnly && !veribase::IsVerium())
         throw JSONRPCError(RPC_WALLET_ERROR, "Error: Wallet unlocked for block minting only, unable to create transaction.");
 
     // Parse ppcoin address
@@ -2414,7 +2414,7 @@ static UniValue getwalletinfo(const JSONRPCRequest& request)
         return NullUniValue;
     }
 
-    if( ! Params().IsVericoin() ) {
+    if (veribase::IsVerium()) {
 
         RPCHelpMan{"getwalletinfo",
             "Returns an object containing various wallet state info.\n",
@@ -2543,7 +2543,7 @@ static UniValue getwalletinfo(const JSONRPCRequest& request)
         obj.pushKV("scanning", false);
     }
 
-    if( Params().IsVericoin() )
+    if (!veribase::IsVerium())
     {
         obj.pushKV("newmint", ValueFromAmount(pwallet->GetNewMint()));
         obj.pushKV("stake", ValueFromAmount(bal.m_mine_stake));
@@ -3465,7 +3465,7 @@ UniValue makekeypair(const JSONRPCRequest& request)
         },
     }.Check(request);
 
-    if( ! Params().IsVericoin() )
+    if (veribase::IsVerium())
         throw JSONRPCError(RPC_INVALID_REQUEST, "Action impossible on Verium");
 
 
@@ -3515,7 +3515,7 @@ UniValue showkeypair(const JSONRPCRequest& request)
         },
     }.Check(request);
 
-    if( ! Params().IsVericoin() )
+    if (veribase::IsVerium())
         throw JSONRPCError(RPC_INVALID_REQUEST, "Action impossible on Verium");
 
     std::string strPrivKey = request.params[0].get_str();
@@ -3570,7 +3570,7 @@ UniValue reservebalance(const JSONRPCRequest& request)
         },
     }.Check(request);
 
-    if( ! Params().IsVericoin() )
+    if (veribase::IsVerium())
         throw JSONRPCError(RPC_INVALID_REQUEST, "Action impossible on Verium");
 
     if (request.params.size() > 0)

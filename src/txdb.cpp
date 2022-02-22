@@ -279,7 +279,7 @@ bool CBlockTreeDB::LoadBlockIndexGuts(const Consensus::Params& consensusParams, 
                 pindexNew->nMint          = diskindex.nMint;
                 pindexNew->nMoneySupply   = diskindex.nMoneySupply;
 
-                if( consensusParams.fIsVericoin ) {
+                if (!veribase::IsVerium()) {
                     pindexNew->nFlags         = diskindex.nFlags;
                     pindexNew->nStakeModifier = diskindex.nStakeModifier;
                     pindexNew->prevoutStake   = diskindex.prevoutStake;

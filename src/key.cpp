@@ -9,6 +9,7 @@
 #include <crypto/common.h>
 #include <crypto/hmac_sha512.h>
 #include <random.h>
+#include <veribase.h>
 
 #include <secp256k1.h>
 #include <secp256k1_recovery.h>
@@ -236,7 +237,7 @@ bool CKey::VerifyPubKey(const CPubKey& pubkey) const {
     }
     unsigned char rnd[8];
     std::string str = "Vericoin key verification\n";
-    if( ! IsVericoin )
+    if (veribase::IsVerium())
         str = "Verium key verification\n";
 
     GetRandBytes(rnd, sizeof(rnd));

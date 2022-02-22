@@ -1766,7 +1766,7 @@ bool static ProcessHeadersMessage(CNode* pfrom, CConnman* connman, CTxMemPool& m
             nodestate->m_last_block_announcement = GetTime();
         }
 
-        if (nCount == MAX_HEADERS_RESULTS) {
+        if (nCount == veribase::NetworkMaxHeadersResults()) {
             // Headers message had its maximum size; the peer may have more headers.
             // TODO: optimize: if pindexLast is an ancestor of ::ChainActive().Tip or pindexBestHeader, continue
             // from there instead.
@@ -1827,7 +1827,7 @@ bool static ProcessHeadersMessage(CNode* pfrom, CConnman* connman, CTxMemPool& m
         }
         // If we're in IBD, we want outbound peers that will serve us a useful
         // chain. Disconnect peers that are on chains with insufficient work.
-        if (::ChainstateActive().IsInitialBlockDownload() && nCount != MAX_HEADERS_RESULTS) {
+        if (::ChainstateActive().IsInitialBlockDownload() && nCount != veribase::NetworkMaxHeadersResults()) {
             // When nCount < MAX_HEADERS_RESULTS, we know we have no more
             // headers to fetch from this peer.
             if (nodestate->pindexBestKnownBlock && nodestate->pindexBestKnownBlock->nChainWork < nMinimumChainWork) {
@@ -1952,7 +1952,7 @@ bool ProcessMessage(CNode* pfrom, const std::string& msg_type, CDataStream& vRec
     }
 
     if (msg_type == NetMsgType::VERSION) {
-        if(chainparams.IsVericoin()) {
+        if (!veribase::IsVerium()) {
             auto it = mapPoSTemperature.find(pfrom->addr);
             if (it == mapPoSTemperature.end())
                 mapPoSTemperature[pfrom->addr] = MAX_CONSECUTIVE_POS_HEADERS/4;
@@ -2388,7 +2388,7 @@ bool ProcessMessage(CNode* pfrom, const std::string& msg_type, CDataStream& vRec
             pindex = ::ChainActive().Next(pindex);
 
         int nLimit = 2000;
-        if ( chainparams.IsVericoin() )
+        if (!veribase::IsVerium())
             nLimit = 20000;
 
         LogPrint(BCLog::NET, "getblocks %d to %s limit %d from peer=%d\n", (pindex ? pindex->nHeight : -1), hashStop.IsNull() ? "end" : hashStop.ToString(), nLimit, pfrom->GetId());
@@ -2399,7 +2399,7 @@ bool ProcessMessage(CNode* pfrom, const std::string& msg_type, CDataStream& vRec
                 LogPrint(BCLog::NET, "  getblocks stopping at %d %s\n", pindex->nHeight, pindex->GetBlockHash().ToString());
                 // ppcoin: tell downloading node about the latest block if it's
                 // without risk being rejected due to stake connection check
-                if ( Params().IsVericoin() && hashStop != ::ChainActive().Tip()->GetBlockHash() && pindex->GetBlockTime() + Params().GetConsensus().nStakeMinAge > ::ChainActive().Tip()->GetBlockTime())
+                if (!veribase::IsVerium() && hashStop != ::ChainActive().Tip()->GetBlockHash() && pindex->GetBlockTime() + Params().GetConsensus().nStakeMinAge > ::ChainActive().Tip()->GetBlockTime())
                     pfrom->PushInventory(CInv(MSG_BLOCK, ::ChainActive().Tip()->GetBlockHash()));
                 break;
             }
@@ -2507,7 +2507,7 @@ bool ProcessMessage(CNode* pfrom, const std::string& msg_type, CDataStream& vRec
 
         // we must use CBlocks, as CBlockHeaders won't include the 0x00 nTx count at the end
         std::vector<CBlock> vHeaders;
-        int nLimit = MAX_HEADERS_RESULTS;
+        int nLimit = veribase::NetworkMaxHeadersResults();
         LogPrint(BCLog::NET, "getheaders %d to %s from peer=%d\n", (pindex ? pindex->nHeight : -1), hashStop.IsNull() ? "end" : hashStop.ToString(), pfrom->GetId());
         for (; pindex; pindex = ::ChainActive().Next(pindex))
         {
@@ -2713,7 +2713,7 @@ bool ProcessMessage(CNode* pfrom, const std::string& msg_type, CDataStream& vRec
             }
         }
 
-        if( chainparams.IsVericoin() ) {
+        if (!veribase::IsVerium()) {
             if (nPoSTemperature >= MAX_CONSECUTIVE_POS_HEADERS) {
                 nPoSTemperature = (MAX_CONSECUTIVE_POS_HEADERS*3)/4;
                 if (Params().NetworkIDString() != "test") {
@@ -3001,7 +3001,7 @@ bool ProcessMessage(CNode* pfrom, const std::string& msg_type, CDataStream& vRec
 
         // Bypass the normal CBlock deserialization, as we don't want to risk deserializing 2000 full blocks.
         unsigned int nCount = ReadCompactSize(vRecv);
-        if (nCount > MAX_HEADERS_RESULTS) {
+        if (nCount > veribase::NetworkMaxHeadersResults()) {
             LOCK(cs_main);
             Misbehaving(pfrom->GetId(), 20, strprintf("headers message size = %u", nCount));
             return false;
@@ -3024,7 +3024,7 @@ bool ProcessMessage(CNode* pfrom, const std::string& msg_type, CDataStream& vRec
             return true;
         }
 
-        if(chainparams.IsVericoin()) {
+        if (!veribase::IsVerium()) {
             std::shared_ptr<CBlock> pblock2 = std::make_shared<CBlock>();
             vRecv >> *pblock2;
 
@@ -3139,7 +3139,7 @@ bool ProcessMessage(CNode* pfrom, const std::string& msg_type, CDataStream& vRec
                     LOCK(cs_main);
                     mapBlockSource.erase(pblock->GetHash());
                 }
-                if(chainparams.IsVericoin() && fPoSDuplicate)
+                if(!veribase::IsVerium() && fPoSDuplicate)
                 {
                     LOCK(cs_main);
                     int32_t& nPoSTemperature = mapPoSTemperature[pfrom->addr];
@@ -3177,7 +3177,7 @@ bool ProcessMessage(CNode* pfrom, const std::string& msg_type, CDataStream& vRec
         }
 
         // warmer it get, nearer we are from a ban
-        if(chainparams.IsVericoin() && fPoSDuplicate)
+        if(!veribase::IsVerium() && fPoSDuplicate)
         {
             LOCK(cs_main);
             int32_t& nPoSTemperature = mapPoSTemperature[pfrom->addr];

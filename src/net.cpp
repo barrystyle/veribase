@@ -21,6 +21,7 @@
 #include <ui_interface.h>
 #include <util/strencodings.h>
 #include <util/translation.h>
+#include <veribase.h>
 
 #ifdef WIN32
 #include <string.h>
@@ -652,8 +653,8 @@ int V1TransportDeserializer::readHeader(const char *pch, unsigned int nBytes)
         return -1;
     }
 
-    // reject messages larger than MAX_SIZE or MAX_PROTOCOL_MESSAGE_LENGTH
-    if (hdr.nMessageSize > MAX_SIZE || hdr.nMessageSize > MAX_PROTOCOL_MESSAGE_LENGTH) {
+    // reject messages larger than _MSGMAX
+    if (hdr.nMessageSize > veribase::NetworkMaxMsgSize()) {
         return -1;
     }
 

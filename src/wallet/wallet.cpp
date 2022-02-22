@@ -1681,7 +1681,7 @@ int64_t CWallet::RescanFromTime(int64_t startTime, const WalletRescanReserver& r
     uint256 start_block;
     {
         auto locked_chain = chain().lock();
-        const Optional<int> start_height = locked_chain->findFirstBlockWithTimeAndHeight(startTime - TIMESTAMP_WINDOW, 0, &start_block);
+        const Optional<int> start_height = locked_chain->findFirstBlockWithTimeAndHeight(startTime - veribase::NetworkMaxFutureBlockTime(), 0, &start_block);
         const Optional<int> tip_height = locked_chain->getHeight();
         WalletLogPrintf("%s: Rescanning last %i blocks\n", __func__, tip_height && start_height ? *tip_height - *start_height + 1 : 0);
     }
@@ -1694,7 +1694,7 @@ int64_t CWallet::RescanFromTime(int64_t startTime, const WalletRescanReserver& r
             if (!chain().findBlock(result.last_failed_block, nullptr /* block */, nullptr /* time */, &time_max)) {
                 throw std::logic_error("ScanForWalletTransactions returned invalid block hash");
             }
-            return time_max + TIMESTAMP_WINDOW + 1;
+            return time_max + veribase::NetworkMaxFutureBlockTime() + 1;
         }
     }
     return startTime;
@@ -3647,7 +3647,7 @@ void CWallet::GetKeyBirthTimes(interfaces::Chain::Lock& locked_chain, std::map<C
 
     // Extract block timestamps for those keys
     for (const auto& entry : mapKeyFirstBlock)
-        mapKeyBirth[entry.first] = locked_chain.getBlockTime(entry.second) - TIMESTAMP_WINDOW; // block times can be 2h off
+        mapKeyBirth[entry.first] = locked_chain.getBlockTime(entry.second) - veribase::NetworkMaxFutureBlockTime(); // block times can be 2h off
 }
 
 /**
@@ -4063,7 +4063,7 @@ std::shared_ptr<CWallet> CWallet::CreateWalletFromFile(interfaces::Chain& chain,
             if (!time_first_key || time < *time_first_key) time_first_key = time;
         }
         if (time_first_key) {
-            if (Optional<int> first_block = locked_chain->findFirstBlockWithTimeAndHeight(*time_first_key - TIMESTAMP_WINDOW, rescan_height, nullptr)) {
+            if (Optional<int> first_block = locked_chain->findFirstBlockWithTimeAndHeight(*time_first_key - veribase::NetworkMaxFutureBlockTime(), rescan_height, nullptr)) {
                 rescan_height = *first_block;
             }
         }

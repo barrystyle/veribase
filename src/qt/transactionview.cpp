@@ -78,7 +78,7 @@ TransactionView::TransactionView(const PlatformStyle *platformStyle, QWidget *pa
                                   TransactionFilterProxy::TYPE(TransactionRecord::SendToOther));
     typeWidget->addItem(tr("To yourself"), TransactionFilterProxy::TYPE(TransactionRecord::SendToSelf));
 
-    if( GUIUtil::IsVericoin())
+    if (!veribase::IsVerium())
         typeWidget->addItem(tr("Staked"), TransactionFilterProxy::TYPE(TransactionRecord::Stake));
     else
         typeWidget->addItem(tr("Mined"), TransactionFilterProxy::TYPE(TransactionRecord::Generated));

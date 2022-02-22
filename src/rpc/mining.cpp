@@ -176,7 +176,7 @@ static UniValue generatetoaddress(const JSONRPCRequest& request)
 
 static UniValue getmininginfo(const JSONRPCRequest& request)
 {
-    if( ! Params().IsVericoin()) {
+    if (veribase::IsVerium()) {
 
         RPCHelpMan{"getmininginfo",
             "\nReturns a json object containing mining-related information.",
@@ -262,7 +262,7 @@ static UniValue getmininginfo(const JSONRPCRequest& request)
     obj.pushKV("blockreward",       (double)GetProofOfWorkReward(0,::ChainActive().Tip()->pprev)/COIN);
     obj.pushKV("blocksperhour",     GetBlockRatePerHour());
 
-    if( ! Params().IsVericoin())
+    if (veribase::IsVerium())
     {
         double blocktime = (double)CalculateBlocktime(::ChainActive().Tip())/60;
         double totalhashrate = GetHashRate();
@@ -625,7 +625,7 @@ static UniValue getblocktemplate(const JSONRPCRequest& request)
     aMutable.push_back("prevblock");
 
     // to permit most famous cpuminer to work
-//    if( !Params().IsVericoin() )
+//    if( !!veribase::IsVerium() )
 //        aMutable.push_back("version/force");
 
     UniValue result(UniValue::VOBJ);
@@ -636,7 +636,7 @@ static UniValue getblocktemplate(const JSONRPCRequest& request)
     aRules.push_back("!segwit");
 
     // to permit most famous cpuminer to work
-//    if( Params().IsVericoin() )
+//    if (!veribase::IsVerium())
         result.pushKV("version", pblock->nVersion);
 //    else
 //        result.pushKV("version", 3);
@@ -801,7 +801,7 @@ UniValue minerstatus(const JSONRPCRequest& request)
         },
     }.Check(request);
 
-    if( Params().IsVericoin())
+    if (!veribase::IsVerium())
         throw JSONRPCError(RPC_INVALID_REQUEST, "Action impossible on Vericoin");
 
     UniValue obj(UniValue::VOBJ);
@@ -830,7 +830,7 @@ UniValue minerstart(const JSONRPCRequest& request)
         },
     }.Check(request);
 
-    if( Params().IsVericoin())
+    if (!veribase::IsVerium())
         throw JSONRPCError(RPC_INVALID_REQUEST, "Action impossible on Vericoin");
 
     if(!g_rpc_node->connman)
@@ -873,7 +873,7 @@ UniValue minerstop(const JSONRPCRequest& request)
         },
     }.Check(request);
 
-    if( Params().IsVericoin())
+    if (!veribase::IsVerium())
         throw JSONRPCError(RPC_INVALID_REQUEST, "Action impossible on Vericoin");
 
     if(!g_rpc_node->connman)
@@ -914,7 +914,7 @@ UniValue getwork(const JSONRPCRequest& request)
         },
     }.Check(request);
 
-    if( Params().IsVericoin())
+    if (!veribase::IsVerium())
         throw JSONRPCError(RPC_INVALID_REQUEST, "Action impossible on Vericoin");
 
     LOCK(cs_main);
@@ -1061,7 +1061,7 @@ UniValue stakingstatus(const JSONRPCRequest& request)
         },
     }.Check(request);
 
-    if( ! Params().IsVericoin())
+    if (veribase::IsVerium())
         throw JSONRPCError(RPC_INVALID_REQUEST, "Action impossible on Verium");
 
     UniValue obj(UniValue::VOBJ);
@@ -1087,7 +1087,7 @@ UniValue stakingstart(const JSONRPCRequest& request)
         },
     }.Check(request);
 
-    if( ! Params().IsVericoin())
+    if (veribase::IsVerium())
         throw JSONRPCError(RPC_INVALID_REQUEST, "Action impossible on Verium");
 
     if(!g_rpc_node->connman)
@@ -1126,7 +1126,7 @@ UniValue stakingstop(const JSONRPCRequest& request)
         },
     }.Check(request);
 
-    if( ! Params().IsVericoin())
+    if (veribase::IsVerium())
         throw JSONRPCError(RPC_INVALID_REQUEST, "Action impossible on Verium");
 
     if(!g_rpc_node->connman)

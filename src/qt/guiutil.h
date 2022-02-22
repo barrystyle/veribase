@@ -271,7 +271,6 @@ namespace GUIUtil
      */
     void LogQtInfo();
 
-    bool IsVericoin();
     QString GetCoinName();
     QString GetCurrencyName();
 } // namespace GUIUtil
